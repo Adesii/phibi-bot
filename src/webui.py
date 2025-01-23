@@ -54,7 +54,8 @@ class WSBroadcaster(ObserverClient):
             global jaison
             if jaison.response_cancelled:
                 return
-            shutil.copy(jaison.config.RESULT_TTSC, os.path.join(os.path.dirname(os.path.realpath(__file__)), 'static/generated/response.wav'))
+            if jaison.config.t2t_enable_context_av:
+                shutil.copy(jaison.config.RESULT_TTSC, os.path.join(os.path.dirname(os.path.realpath(__file__)), 'static/generated/response.wav'))
 
         global socketio
         socketio.emit(
@@ -117,14 +118,20 @@ def base_api_no_response(fun, params=[], kwargs={}, info_msg="", success_msg="",
 
 @app.route('/api/one-time-request', methods=['POST'])
 def api_one_time_request():
-    return base_api_no_response(
-        jaison.inject_one_time_request,
-        params=[json.loads(request.data)],
+    temp = base_api_no_response(
+        jaison.get_response_from_text,
+        params=["Phibi",json.loads(request.data)],
         info_msg="Queuing one-time request...",
         success_msg="One-time request queued!",
         error_msg="Failed to queue one-time request!"
     )
-
+    print(temp)
+    """ jaison.get_response_from_text(
+        name="Phibi",
+        message="Hello, how are you?",
+        time="2025-01-16 12:00:00"
+    ) """
+    return temp
 @app.route('/api/get_name_translations', methods=['GET'])
 def api_get_name_translations():
     return base_api_with_response(
@@ -248,8 +255,11 @@ def start_ui(jaison_app):
     global event_client
     global page_params
     jaison = jaison_app
-    page_params = {
-        "twitch_relink_url": jaison.twitch.OAUTH_AUTHORIZE_URL
-    }
+    if jaison.config.t2t_enable_context_twitch_chat:    
+        page_params = {
+            "twitch_relink_url": jaison.twitch.OAUTH_AUTHORIZE_URL
+        }
+    else:
+        page_params = {}
     event_client = WSBroadcaster(jaison.broadcast_server)
     socketio.run(app, port=PORT)

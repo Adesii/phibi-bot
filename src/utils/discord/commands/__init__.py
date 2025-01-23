@@ -19,7 +19,7 @@ def add_commands(client: discord.Client, server_id: str):
     tree.clear_commands(**params)
 
     # List of command group setups
-    VoiceCommandGroup(params=params).setup(tree)
+    #VoiceCommandGroup(params=params).setup(tree)
 
     # Returning final tree
     return tree, params
